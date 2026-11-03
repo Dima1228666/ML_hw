@@ -1,5 +1,6 @@
-import numpy as np
 from itertools import combinations_with_replacement
+
+import numpy as np
 
 
 class StandardScaler:
@@ -8,7 +9,7 @@ class StandardScaler:
         self.std_ = None
 
     def fit(self, X):
-        X = np.array(X)
+        X = np.asarray(X)
         self.mean_ = np.mean(X, axis=0)
         self.std_ = np.std(X, axis=0)
         self.std_[self.std_ == 0] = 1.0
@@ -18,7 +19,7 @@ class StandardScaler:
     def transform(self, X):
         if self.mean_ is None or self.std_ is None:
             raise ValueError('scaler не обучен')
-        X = np.array(X)
+        X = np.asarray(X)
         return (X - self.mean_) / self.std_
 
     def fit_transform(self, X):
@@ -31,8 +32,8 @@ class PolynomialFeatures:
         self.degree = degree
 
     def transform(self, X):
-        X = np.array(X)
-        n_samples, n_features = X.shape
+        X = np.asarray(X)
+        _, n_features = X.shape
         poly_features = []
 
         for d in range(1, self.degree + 1):

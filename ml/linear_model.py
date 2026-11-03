@@ -1,8 +1,11 @@
-import numpy as np
 from itertools import combinations_with_replacement
-from .base import BaseEstimator, RegressorMixin, ClassifierMixin
+
+import numpy as np
+
 from ml.metrics import r2_score
 from ml.preprocessing import StandardScaler
+
+from .base import BaseEstimator, ClassifierMixin, RegressorMixin
 
 
 class LinearRegression(BaseEstimator, RegressorMixin):
@@ -12,7 +15,7 @@ class LinearRegression(BaseEstimator, RegressorMixin):
         lr: float = 0.01,
         n_iters: int = 1000,
         fit_intercept: bool = True,
-        regularization: str = None,
+        regularization = None,
         alpha: float = 0.1
         ):
 
@@ -26,15 +29,15 @@ class LinearRegression(BaseEstimator, RegressorMixin):
         self.intercept_ = None
 
     def fit(self, X, y):
-        X = np.array(X)
-        y = np.array(y)
+        X = np.asarray(X)
+        y = np.asarray(y)
         m = len(y)
 
         if self.fit_intercept:
             ones = np.ones((m, 1))
             X = np.c_[ones, X]
         else:
-            X = X
+            pass
         w = np.zeros(X.shape[1])
 
         for _ in range(self.n_iters):
@@ -73,7 +76,7 @@ class LinearRegression(BaseEstimator, RegressorMixin):
     def predict(self, X):
         if self.coef_ is None or self.intercept_ is None:
             raise ValueError('модель не обучена')
-        X = np.array(X)
+        X = np.asarray(X)
 
         return X @ self.coef_ + self.intercept_
 
@@ -86,7 +89,7 @@ class PolynomialRegression(BaseEstimator, RegressorMixin):
         n_iters: int = 1000,
         degree: int = -1,
         fit_intercept: bool = True,
-        regularization: str = None,
+        regularization = None,
         alpha: float = 0.1
     ):
         self.lr = lr
@@ -102,7 +105,7 @@ class PolynomialRegression(BaseEstimator, RegressorMixin):
             lr=lr, n_iters=n_iters, fit_intercept=fit_intercept,regularization=regularization,alpha=alpha)
 
     def create_polynomial_features(self, X):
-        X = np.array(X)
+        X = np.asarray(X)
         n_samples, n_features = X.shape
         poly_features = []
 
@@ -119,8 +122,8 @@ class PolynomialRegression(BaseEstimator, RegressorMixin):
         return np.hstack(poly_features)
 
     def fit(self, X, y):
-            X = np.array(X)
-            y = np.array(y)
+            X = np.asarray(X)
+            y = np.asarray(y)
             scaler = StandardScaler()
             
             if self.degree == -1:
@@ -182,15 +185,15 @@ class LogisticRegression(BaseEstimator, ClassifierMixin):
         self.intercept_ = None
 
     def fit(self, X, y):
-        X = np.array(X)
-        y = np.array(y)
+        X = np.asarray(X)
+        y = np.asarray(y)
         m = len(y)
 
         if self.fit_intercept:
             ones = np.ones((m, 1))
             X = np.c_[ones, X]
         else:
-            X = X
+            pass
         w = np.zeros(X.shape[1])
 
         for _ in range(self.n_iters):
@@ -213,6 +216,6 @@ class LogisticRegression(BaseEstimator, ClassifierMixin):
             raise ValueError('модель не обучена')
 
         predict = 1 / (1 + np.exp(-(X @ self.coef_ + self.intercept_)))
-        predict = np.array(predict > 0.5)
+        predict = np.asarray(predict > 0.5)
 
         return predict

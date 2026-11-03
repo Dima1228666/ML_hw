@@ -1,5 +1,7 @@
 import numpy as np
-from .base import BaseEstimator, RegressorMixin, ClassifierMixin
+
+from .base import BaseEstimator, ClassifierMixin, RegressorMixin
+
 
 class SVM:
     def __init__(
@@ -21,8 +23,8 @@ class SVM:
         self.n_iters = n_iters
 
     def compute_kernel(self, X1, X2):
-        X1 = np.array(X1)
-        X2 = np.array(X2)
+        X1 = np.asarray(X1)
+        X2 = np.asarray(X2)
 
         if self.kernel == 'rbf':
             X1_norm = np.sum(X1**2, axis=1, keepdims=True)
@@ -52,7 +54,7 @@ class SVC_binary(SVM, BaseEstimator, ClassifierMixin):
 
     def fit(self, X, y):
         self.X_train_ = X
-        n_samples, n_features = X.shape
+        n_samples, _ = X.shape
         Gram = self.compute_kernel(X, X)
         w = np.zeros(n_samples)
         b = 0
@@ -75,13 +77,13 @@ class SVC_binary(SVM, BaseEstimator, ClassifierMixin):
         return self
 
     def decision_function(self, X):
-        X = np.array(X)
+        X = np.asarray(X)
         K = self.compute_kernel(X, self.X_train_)
 
         return K @ self.coef_ + self.intercept_
 
     def predict(self, X):
-        X = np.array(X)
+        X = np.asarray(X)
 
         return np.sign(self.decision_function(X))
 
@@ -96,8 +98,8 @@ class SVC(BaseEstimator, ClassifierMixin):
         self.models_ = None
 
     def fit(self, X, y):
-        X = np.array(X)
-        y = np.array(y)
+        X = np.asarray(X)
+        y = np.asarray(y)
         self.classes_ = np.unique(y)
         k = len(np.unique(y))
 
@@ -160,7 +162,7 @@ class SVR(SVM, BaseEstimator, RegressorMixin):
 
     def fit(self, X, y):
         self.X_train_ = X
-        n_samples, n_features = X.shape
+        n_samples, _ = X.shape
         Gram = self.compute_kernel(X, X)
         w = np.zeros(n_samples)
         b = 0
@@ -185,7 +187,7 @@ class SVR(SVM, BaseEstimator, RegressorMixin):
         return self
 
     def predict(self, X):
-        X = np.array(X)
+        X = np.asarray(X)
         K = self.compute_kernel(X, self.X_train_)
 
         return K @ self.coef_ + self.intercept_

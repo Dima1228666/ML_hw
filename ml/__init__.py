@@ -1,35 +1,30 @@
-from .base import BaseEstimator, ClassifierMixin, RegressorMixin
-
+from .base import BaseEstimator, ClassifierMixin, RegressorMixin  # noqa: I001
 from .linear_model import (
     LinearRegression,
-    PolynomialRegression,
     LogisticRegression,
+    PolynomialRegression,
+)
+from .metrics import (
+    accuracy,
+    f1_score,
+    mean_absolute_error,
+    mean_squared_error,
+    precision,
+    r2_score,
+    recall,
 )
 
-from .svm import SVM, SVC, SVC_binary, SVR
-
-from .tree import DecisionTreeClassifier, DecisionTreeRegressor
-
-# from .ensemble import (
-#     RandomForestClassifier,
-#     RandomForestRegressor,
+from .ensemble import (
+    RandomForestClassifier,
+    RandomForestRegressor)
 #     GradientBoostingClassifier,
 #     GradientBoostingRegressor,
 # )
+from .preprocessing import PolynomialFeatures, StandardScaler
+from .svm import SVC, SVM, SVR, SVC_binary
+from .tree import DecisionTreeClassifier, DecisionTreeRegressor
 
-from .preprocessing import StandardScaler, PolynomialFeatures
-
-from .metrics import (
-    accuracy,
-    precision,
-    recall,
-    f1_score,
-    mean_squared_error,
-    mean_absolute_error,
-    r2_score,
-)
-
-__all__ = [
+__all__ = [  # noqa: RUF022
     'BaseEstimator',
     'ClassifierMixin',
     'RegressorMixin',
@@ -42,8 +37,8 @@ __all__ = [
     'SVR',
     'DecisionTreeClassifier',
     'DecisionTreeRegressor',
-    # 'RandomForestClassifier',
-    # 'RandomForestRegressor',
+    'RandomForestClassifier',
+    'RandomForestRegressor',
     # 'GradientBoostingClassifier',
     # 'GradientBoostingRegressor',
     'StandardScaler',

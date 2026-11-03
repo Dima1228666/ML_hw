@@ -1,5 +1,6 @@
 import numpy as np
-from .base import BaseEstimator, RegressorMixin, ClassifierMixin
+
+from .base import BaseEstimator, ClassifierMixin, RegressorMixin
 
 
 class Node:
@@ -20,9 +21,11 @@ class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
         self,
         max_depth=None,
         min_samples_split=2,
-        min_samples_leaf=1
+        min_samples_leaf=1,
+        max_features=None
     ):
         self.max_depth = max_depth
+        self.max_features = max_features
         self.min_samples_split = min_samples_split
         self.min_samples_leaf = min_samples_leaf
         self.root = None
@@ -32,6 +35,14 @@ class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
             return 0.0
         return np.mean((y - np.mean(y)) ** 2)
 
+    def _get_subsample(self, n_features):
+        if self.max_features is None or self.max_features >= n_features:
+            return np.arange(n_features)
+
+        size = max(1, min(self.max_features, n_features))
+        
+        return np.random.choice(n_features, size=size, replace=False)
+
     def _best_split(self, X, y):
         n_samples, n_features = X.shape
         best_quality = -1.0
@@ -39,7 +50,7 @@ class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
         best_threshold = None
         cur_mse = self._mse(y)
 
-        for feature_idx in range(n_features):
+        for feature_idx in self._get_subsample(n_features):
             X_col = X[:, feature_idx]
             thresholds = np.unique(X_col)
 
@@ -84,8 +95,8 @@ class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
         return Node(feature=best_feature, threshold=best_threshold, left=left_tree, right=right_tree)
 
     def fit(self, X, y):
-        X = np.array(X)
-        y = np.array(y)
+        X = np.asarray(X)
+        y = np.asarray(y)
         self.root = self._build_tree(X, y)
 
         return self
@@ -110,11 +121,13 @@ class DecisionTreeClassifier(BaseEstimator, ClassifierMixin):
         self,
         criterion='gini',
         max_depth=None,
+        max_features=None,
         min_samples_split=2,
         min_samples_leaf=1
     ):
         self.criterion = criterion
         self.max_depth = max_depth
+        self.max_features = max_features
         self.min_samples_split = min_samples_split
         self.min_samples_leaf = min_samples_leaf
         self.root = None
@@ -124,23 +137,33 @@ class DecisionTreeClassifier(BaseEstimator, ClassifierMixin):
         if len(y) == 0:
             return 0.0
 
-        values, counts = np.unique(y, return_counts=True)
+        _, counts = np.unique(y, return_counts=True)
         probabilities = counts / len(y)
 
         if self.criterion == 'gini':
             return 1.0 - np.sum(probabilities ** 2)
         
         elif self.criterion == 'entropy':
-            if probabilities == 0:
-                return 0
-            return -np.sum(probabilities * np.log2(probabilities))
+            _, counts = np.unique(y, return_counts=True)
+            probabilities = counts / len(y)
+            probs = probabilities[probabilities > 0]
+
+            return -np.sum(probs * np.log2(probs))
         
         else:
-            raise ValueError(f'неправильный критерий')
+            raise ValueError('неправильный критерий')
 
     def _most_common_class(self, y):
         values, counts = np.unique(y, return_counts=True)
         return values[np.argmax(counts)]
+
+    def _get_subsample(self, n_features):
+        if self.max_features is None or self.max_features >= n_features:
+            return np.arange(n_features)
+
+        size = max(1, min(self.max_features, n_features))
+        
+        return np.random.choice(n_features, size=size, replace=False)
 
     def _best_split(self, X, y):
         n_samples, n_features = X.shape
@@ -149,7 +172,7 @@ class DecisionTreeClassifier(BaseEstimator, ClassifierMixin):
         best_threshold = None
         cur_impurity = self._calculate_impurity(y)
 
-        for feature_idx in range(n_features):
+        for feature_idx in self._get_subsample(n_features):
             X_col = X[:, feature_idx]
             thresholds = np.unique(X_col)
 

@@ -78,8 +78,7 @@ class DecisionTreeRegressor(BaseEstimator, RegressorMixin):
         n_samples = X.shape[0]
 
         if (self.max_depth is not None and depth >= self.max_depth) or \
-           (n_samples < self.min_samples_split) or \
-           (len(np.unique(y)) == 1):
+           (n_samples < self.min_samples_split):
             return Node(value=np.mean(y))
 
         best_feature, best_threshold, best_quality = self._best_split(X, y)
@@ -203,8 +202,7 @@ class DecisionTreeClassifier(BaseEstimator, ClassifierMixin):
         n_samples = X.shape[0]
 
         if (self.max_depth is not None and depth >= self.max_depth) or \
-           (n_samples < self.min_samples_split) or \
-           (len(np.unique(y)) == 1):
+           (n_samples < self.min_samples_split):
             return Node(value=self._most_common_class(y))
         
         best_feature, best_threshold, best_quality = self._best_split(X, y)

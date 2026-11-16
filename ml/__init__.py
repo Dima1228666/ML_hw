@@ -16,10 +16,10 @@ from .metrics import (
 
 from .ensemble import (
     RandomForestClassifier,
-    RandomForestRegressor)
-#     GradientBoostingClassifier,
-#     GradientBoostingRegressor,
-# )
+    RandomForestRegressor,
+    GradientBoostingClassifier,
+    GradientBoostingRegressor,
+)
 from .preprocessing import PolynomialFeatures, StandardScaler
 from .svm import SVC, SVM, SVR, SVC_binary
 from .tree import DecisionTreeClassifier, DecisionTreeRegressor
@@ -39,8 +39,8 @@ __all__ = [  # noqa: RUF022
     'DecisionTreeRegressor',
     'RandomForestClassifier',
     'RandomForestRegressor',
-    # 'GradientBoostingClassifier',
-    # 'GradientBoostingRegressor',
+    'GradientBoostingClassifier',
+    'GradientBoostingRegressor',
     'StandardScaler',
     'PolynomialFeatures',
     'accuracy',

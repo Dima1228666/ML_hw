@@ -221,8 +221,9 @@ class GradientBoostingClassifier(BaseEstimator, ClassifierMixin):
         self.classes_ = None
 
     @staticmethod
-    def _sigmoid(z):
-        return 1.0 / (1.0 + np.exp(-z))
+    def _softmax(z):
+        exp_z = np.exp(z - np.max(z, axis=1, keepdims=True))
+        return exp_z / np.sum(exp_z, axis=1, keepdims=True)
 
     def _create_tree(self):
         return DecisionTreeRegressor(
@@ -235,50 +236,61 @@ class GradientBoostingClassifier(BaseEstimator, ClassifierMixin):
     def _find_gamma(self, y, p, tree_pred):
         num = np.sum((y - p) * tree_pred)
         den = np.sum(p * (1.0 - p) * (tree_pred ** 2))
+        n_classes = len(self.classes_)
 
-        return num / den
+        return ((n_classes - 1) / n_classes) * (num / den)
 
     def fit(self, X, y):
         X = np.asarray(X)
         y = np.asarray(y)
         self.classes_ = np.unique(y)
-        y_binary = np.where(y == self.classes_[1], 1.0, 0.0)
+        n_classes = len(self.classes_)
 
-        p_mean = np.mean(y_binary)
-        self.base_pred_ = np.log(p_mean / (1.0 - p_mean))
+        y_one_hot = np.zeros((X.shape[0], n_classes))
+        for k, cls in enumerate(self.classes_):
+            y_one_hot[y == cls, k] = 1.0
 
-        pred = np.full(shape=X.shape[0], fill_value=self.base_pred_)
+        p_mean = np.mean(y_one_hot, axis=0)
+        self.base_pred_ = np.log(p_mean)
+
+        pred = np.full(shape=(X.shape[0], n_classes), fill_value=self.base_pred_)
 
         for _ in range(self.n_estimators):
-            p = self._sigmoid(pred)
-            residuals = y_binary - p
+            p = self._softmax(pred)
+            trees = []
 
-            tree = self._create_tree()
-            tree.fit(X, residuals)
-            tree_pred = tree.predict(X)
+            for k in range(n_classes):
+                residuals = y_one_hot[:, k] - p[:, k]
 
-            gamma = self._find_gamma(y_binary, p, tree_pred)
-            pred += self.learning_rate * gamma * tree_pred
+                tree = self._create_tree()
+                tree.fit(X, residuals)
+                tree_pred = tree.predict(X)
 
-            self.estimators_.append((tree, gamma))
+                gamma = self._find_gamma(y_one_hot[:, k], p[:, k], tree_pred)
+                pred[:, k] += self.learning_rate * gamma * tree_pred
+
+                trees.append((tree, gamma))
+
+            self.estimators_.append(trees)
 
         return self
 
     def predict_raw(self, X):
         X = np.asarray(X)
-        raw_pred = np.full(shape=X.shape[0], fill_value=self.base_pred_)
+        n_classes = len(self.classes_)
+        raw_pred = np.full(shape=(X.shape[0], n_classes), fill_value=self.base_pred_)
 
-        for tree, gamma in self.estimators_:
-            raw_pred += self.learning_rate * gamma * tree.predict(X)
+        for trees in self.estimators_:
+            for k in range(n_classes):
+                tree, gamma = trees[k]
+                raw_pred[:, k] += self.learning_rate * gamma * tree.predict(X)
 
         return raw_pred
 
     def predict_proba(self, X):
         raw_pred = self.predict_raw(X)
-        p1 = self._sigmoid(raw_pred)
-        p0 = 1.0 - p1
-        return np.column_stack([p0, p1])
+        return self._softmax(raw_pred)
 
     def predict(self, X):
-        proba = self.predict_proba(X)[:, 1]
-        return np.where(proba >= 0.5, self.classes_[1], self.classes_[0])
+        proba = self.predict_proba(X)
+        return self.classes_[np.argmax(proba, axis=1)]
